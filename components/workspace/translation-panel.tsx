@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { motion } from "framer-motion"
-import { Languages, ChevronDown, Loader2, ArrowRight, X, Check } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Languages, ChevronDown, Loader2, ArrowRight, X, Check, Sparkles, Wand2 } from "lucide-react"
 import { Handle, Position } from "@xyflow/react"
 import { LANGUAGES } from "@/lib/lingo"
 
@@ -14,15 +14,99 @@ interface TranslationPanelProps {
     }
 }
 
+// ══════════════════════════════════════════════════════════════════
+//  BACKEND-POWERED AUTO-DETECT — uses Python langdetect via API
+//  Hackathon-ready: backend accuracy + graceful fallback
+// ══════════════════════════════════════════════════════════════════
+
+const SUPPORTED_CODES = new Set(LANGUAGES.map(l => l.code))
+
+/**
+ * Calls the backend /api/detect-language endpoint.
+ * Falls back to "en" if the backend is unreachable.
+ * GUARANTEED to never throw.
+ */
+async function detectLanguageFromBackend(text: string): Promise<{ code: string; confidence: number }> {
+    try {
+        const res = await fetch("/api/detect-language", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text }),
+        })
+
+        if (!res.ok) return { code: "en", confidence: 0 }
+
+        const data = await res.json()
+        const code = data.code || "en"
+        const confidence = data.confidence ?? 0
+
+        // Make sure the detected code is in our supported languages
+        if (!SUPPORTED_CODES.has(code)) {
+            return { code: "en", confidence: 0 }
+        }
+
+        return { code, confidence }
+    } catch {
+        return { code: "en", confidence: 0 }
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// COMPONENT
+// ══════════════════════════════════════════════════════════════════
+
 export function TranslationPanel({ data }: TranslationPanelProps) {
     const [text, setText] = React.useState("")
     const [mode, setMode] = React.useState<"single" | "multi">("single")
     const [singleLang, setSingleLang] = React.useState("es")
     const [multiLangs, setMultiLangs] = React.useState<string[]>([])
-    const [sourceLang, setSourceLang] = React.useState("en")
-    const [showSourceDropdown, setShowSourceDropdown] = React.useState(false)
+    const [detectedLang, setDetectedLang] = React.useState<{ code: string; confidence: number } | null>(null)
+    const [detecting, setDetecting] = React.useState(false)
     const [showTargetDropdown, setShowTargetDropdown] = React.useState(false)
-    const isLoading = data?.isLoading || false
+    const isLoading = data?.isLoading ?? false
+
+    // Debounced backend detection — fires 500ms after user stops typing
+    React.useEffect(() => {
+        if (!text.trim() || text.trim().length < 3) {
+            setDetectedLang(null)
+            setDetecting(false)
+            return
+        }
+
+        setDetecting(true)
+
+        const timer = setTimeout(async () => {
+            try {
+                const result = await detectLanguageFromBackend(text)
+                setDetectedLang(result)
+            } catch {
+                setDetectedLang({ code: "en", confidence: 0 })
+            } finally {
+                setDetecting(false)
+            }
+        }, 500)
+
+        return () => {
+            clearTimeout(timer)
+            setDetecting(false)
+        }
+    }, [text])
+
+    const sourceLang = detectedLang?.code ?? "en"
+
+    // Smart auto-swap: if detected source matches the current target, switch target
+    React.useEffect(() => {
+        if (!detectedLang) return
+
+        if (mode === "single" && singleLang === detectedLang.code) {
+            const fallback = LANGUAGES.find(l => l.code !== detectedLang.code)
+            if (fallback) setSingleLang(fallback.code)
+        }
+
+        if (mode === "multi") {
+            setMultiLangs(prev => prev.filter(c => c !== detectedLang.code))
+        }
+    }, [detectedLang?.code]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const toggleMultiLang = (code: string) => {
         setMultiLangs(prev =>
@@ -37,7 +121,22 @@ export function TranslationPanel({ data }: TranslationPanelProps) {
         data?.onTranslate?.(text, sourceLang, targets)
     }
 
-    const availableTargetLangs = LANGUAGES.filter(l => l.code !== sourceLang)
+    const availableTargetLangs = React.useMemo(
+        () => LANGUAGES.filter(l => l.code !== sourceLang),
+        [sourceLang]
+    )
+
+    const detectedLangInfo = LANGUAGES.find(l => l.code === sourceLang)
+
+    // Confidence badge
+    const confidenceBadge = React.useMemo(() => {
+        if (!detectedLang) return { color: "", label: "" }
+        if (detectedLang.confidence >= 0.8)
+            return { color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30", label: "Auto-detected" }
+        if (detectedLang.confidence >= 0.5)
+            return { color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30", label: "Best guess" }
+        return { color: "text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800", label: "Low confidence" }
+    }, [detectedLang])
 
     return (
         <motion.div
@@ -70,37 +169,57 @@ export function TranslationPanel({ data }: TranslationPanelProps) {
                     </button>
                 </div>
 
-                {/* Source language selector */}
+                {/* Auto-detect Language Display */}
                 <div className="px-5 pt-4">
-                    <div className="relative">
-                        <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1.5 block">From</label>
-                        <button
-                            onClick={() => { setShowSourceDropdown(!showSourceDropdown); setShowTargetDropdown(false) }}
-                            className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm font-medium text-zinc-700 dark:text-zinc-200 hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
-                        >
-                            <span>{LANGUAGES.find(l => l.code === sourceLang)?.flag} {LANGUAGES.find(l => l.code === sourceLang)?.name}</span>
-                            <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
-                        </button>
-                        {showSourceDropdown && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -4 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="absolute z-50 mt-1 w-full bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-2xl max-h-[400px] overflow-y-auto"
-                                style={{ scrollbarWidth: 'thin' }}
-                            >
-                                {LANGUAGES.map(lang => (
-                                    <button
-                                        key={lang.code}
-                                        onClick={() => { setSourceLang(lang.code); setShowSourceDropdown(false) }}
-                                        className={`w-full text-left px-4 py-2.5 text-[14px] flex items-center gap-3 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors ${sourceLang === lang.code ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 font-semibold" : "text-zinc-700 dark:text-zinc-300"}`}
-                                    >
-                                        <span className="text-lg">{lang.flag}</span>
-                                        <span className="font-medium">{lang.name}</span>
-                                        <span className="text-[10px] text-zinc-400 uppercase ml-auto">{lang.code}</span>
-                                    </button>
-                                ))}
-                            </motion.div>
-                        )}
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1.5 block">From</label>
+                    <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 min-h-[40px]">
+                        <AnimatePresence mode="wait">
+                            {detecting ? (
+                                <motion.div
+                                    key="detecting"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="flex items-center gap-2 flex-1"
+                                >
+                                    <Loader2 className="w-4 h-4 text-blue-400 animate-spin flex-shrink-0" />
+                                    <span className="text-sm text-blue-500 dark:text-blue-400 font-medium">
+                                        Detecting language...
+                                    </span>
+                                </motion.div>
+                            ) : detectedLang && detectedLangInfo ? (
+                                <motion.div
+                                    key={detectedLang.code}
+                                    initial={{ opacity: 0, x: -8 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 8 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="flex items-center gap-2 flex-1 min-w-0"
+                                >
+                                    <span className="text-lg flex-shrink-0">{detectedLangInfo.flag}</span>
+                                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate">
+                                        {detectedLangInfo.name}
+                                    </span>
+                                    <span className={`ml-auto flex-shrink-0 flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${confidenceBadge.color}`}>
+                                        <Wand2 className="w-3 h-3" />
+                                        {confidenceBadge.label}
+                                    </span>
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key="waiting"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="flex items-center gap-2 flex-1"
+                                >
+                                    <Sparkles className="w-4 h-4 text-zinc-300 dark:text-zinc-600 flex-shrink-0" />
+                                    <span className="text-sm text-zinc-400 dark:text-zinc-500 italic">
+                                        Start typing to auto-detect...
+                                    </span>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
 
@@ -148,10 +267,13 @@ export function TranslationPanel({ data }: TranslationPanelProps) {
                         <div className="relative">
                             <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1.5 block">To</label>
                             <button
-                                onClick={() => { setShowTargetDropdown(!showTargetDropdown); setShowSourceDropdown(false) }}
+                                onClick={() => setShowTargetDropdown(!showTargetDropdown)}
                                 className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm font-medium text-zinc-700 dark:text-zinc-200 hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
                             >
-                                <span>{LANGUAGES.find(l => l.code === singleLang)?.flag} {LANGUAGES.find(l => l.code === singleLang)?.name}</span>
+                                <span>
+                                    {LANGUAGES.find(l => l.code === singleLang)?.flag ?? "🌐"}{" "}
+                                    {LANGUAGES.find(l => l.code === singleLang)?.name ?? singleLang}
+                                </span>
                                 <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
                             </button>
                             {showTargetDropdown && (
@@ -159,7 +281,7 @@ export function TranslationPanel({ data }: TranslationPanelProps) {
                                     initial={{ opacity: 0, y: -4 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     className="absolute z-50 mt-1 w-full bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-2xl max-h-[400px] overflow-y-auto"
-                                    style={{ scrollbarWidth: 'thin' }}
+                                    style={{ scrollbarWidth: "thin" }}
                                 >
                                     {availableTargetLangs.map(lang => (
                                         <button
@@ -180,7 +302,7 @@ export function TranslationPanel({ data }: TranslationPanelProps) {
                             <label className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1.5 block">
                                 To ({multiLangs.length} selected)
                             </label>
-                            <div className="grid grid-cols-2 gap-2 max-h-[280px] overflow-y-auto rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 p-2.5" style={{ scrollbarWidth: 'thin' }}>
+                            <div className="grid grid-cols-2 gap-2 max-h-[280px] overflow-y-auto rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 p-2.5" style={{ scrollbarWidth: "thin" }}>
                                 {availableTargetLangs.map(lang => (
                                     <button
                                         key={lang.code}

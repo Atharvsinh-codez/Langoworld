@@ -6,3 +6,4 @@ pytubefix
 bs4
 requests
 python-dotenv
+langdetect

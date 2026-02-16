@@ -13,10 +13,27 @@ from dotenv import load_dotenv
 from services.youtube import get_video_id, get_video_info
 from services.transcript import get_youtube_transcript
 
+# Language detection
+from langdetect import detect, detect_langs
+from langdetect.lang_detect_exception import LangDetectException
+
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+
+# All language codes supported by the LangoWorld project
+SUPPORTED_LANG_CODES = {
+    "en", "es", "fr", "de", "it", "pt", "nl", "pl", "ru",
+    "ja", "ko", "zh-cn", "zh-tw", "ar", "hi", "tr", "sv",
+    "no", "da", "fi", "gu",
+}
+
+# Map langdetect codes to our project codes
+LANG_CODE_MAP = {
+    "zh-cn": "zh",
+    "zh-tw": "zh",
+}
 
 logging.basicConfig(level=logging.INFO, format="[TubeInsight] %(message)s")
 
@@ -24,6 +41,52 @@ logging.basicConfig(level=logging.INFO, format="[TubeInsight] %(message)s")
 @app.route("/api/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok", "service": "TubeInsight"})
+
+
+@app.route("/api/detect-language", methods=["POST"])
+def detect_language():
+    """
+    Detect the language of input text using Google's langdetect.
+
+    Body: { "text": "some text to detect" }
+    Returns: { "code": "pt", "confidence": 0.99 }
+    """
+    try:
+        data = request.get_json()
+        text = (data.get("text", "") if data else "").strip()
+
+        if not text or len(text) < 2:
+            return jsonify({"code": "en", "confidence": 0.0, "reason": "text too short"})
+
+        # Get all possible languages with probabilities
+        results = detect_langs(text)
+
+        if not results:
+            return jsonify({"code": "en", "confidence": 0.0, "reason": "no detection"})
+
+        # Best result
+        best = results[0]
+        detected_code = str(best.lang)
+        confidence = round(float(best.prob), 4)
+
+        # Map to our project codes (e.g. zh-cn → zh)
+        mapped_code = LANG_CODE_MAP.get(detected_code, detected_code)
+
+        # Log for debugging
+        logging.info(f"[Detect] '{text[:50]}...' → {detected_code} ({confidence}) → mapped: {mapped_code}")
+
+        return jsonify({
+            "code": mapped_code,
+            "confidence": confidence,
+            "raw": detected_code,
+        })
+
+    except LangDetectException as e:
+        logging.warning(f"[Detect] LangDetect error: {e}")
+        return jsonify({"code": "en", "confidence": 0.0, "reason": str(e)})
+    except Exception as e:
+        logging.error(f"[Detect] Unexpected error: {e}")
+        return jsonify({"code": "en", "confidence": 0.0, "reason": "error"})
 
 
 @app.route("/api/transcript", methods=["POST"])
