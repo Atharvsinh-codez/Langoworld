@@ -1,0 +1,8 @@
+flask
+flask-cors
+rich
+google-generativeai
+pytubefix
+bs4
+requests
+python-dotenv
