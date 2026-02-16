@@ -751,7 +751,7 @@ MIT License — feel free to use, modify, and distribute.
 ---
 
 <p align="center">
-  <strong>Built with ❤️ by the LangoWorld team</strong>
+  <strong>Built with ❤️ by Atharv</strong>
   <br/>
   <sub>Powered by Gemini AI • lingo.dev • Supabase • Cloudflare R2</sub>
 </p>
