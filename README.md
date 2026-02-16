@@ -475,9 +475,11 @@ cd ..
 
 ### Step 2: Set Up Supabase
 
-1. Create a new Supabase project
-2. Run `supabase-schema.sql` in the **SQL Editor** to create tables + RLS policies
-3. Enable **Email/Password** auth in Authentication → Providers
+1. Create a new Supabase project at [supabase.com](https://supabase.com)
+2. Go to **SQL Editor** in the Supabase dashboard
+3. Copy and paste the **entire** contents of `supabase-setup.sql` → Click **Run**
+4. That's it! All 5 tables, 14 RLS policies, 7 indexes, and 1 trigger are created
+5. Enable **Email/Password** auth in Authentication → Providers
 
 ### Step 3: Configure Environment Variables
 
