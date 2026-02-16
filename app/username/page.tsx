@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { createClient } from "@/lib/supabase-browser"
 import { useRouter } from "next/navigation"
-import { Check, X, Loader2, AtSign, Sparkles, ArrowRight } from "lucide-react"
+import { Check, X, Loader2, AtSign, ArrowRight } from "lucide-react"
 
 export default function UsernamePage() {
     const router = useRouter()
@@ -71,80 +71,256 @@ export default function UsernamePage() {
         finally { setSaving(false) }
     }
 
-    const borderColor = validationError ? 'border-red-300 ring-red-500/10' : available ? 'border-emerald-300 ring-emerald-500/10' : focused ? 'border-blue-300 ring-blue-500/15' : 'border-zinc-200/60'
+    const borderColor = validationError
+        ? 'border-red-300 ring-2 ring-red-500/10'
+        : available
+            ? 'border-emerald-300 ring-2 ring-emerald-500/10'
+            : focused
+                ? 'border-orange-300 ring-2 ring-orange-400/20'
+                : 'border-zinc-200/60'
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] overflow-hidden selection:bg-blue-100 selection:text-blue-900 flex items-center justify-center px-6 py-12">
+        <div className="min-h-screen bg-[#FAFAF9] overflow-hidden selection:bg-orange-100 selection:text-orange-900 flex">
 
-            {/* Background — blue + orange orbs */}
-            <div className="absolute inset-0 pointer-events-none z-0">
-                <div className="absolute w-[600px] h-[600px] rounded-full blur-[140px] opacity-25" style={{ background: "radial-gradient(circle, #3B82F6 0%, #93C5FD 40%, transparent 70%)", top: "-10%", left: "50%", transform: "translateX(-50%)" }} />
-                <div className="absolute w-[300px] h-[300px] rounded-full blur-[90px] opacity-20" style={{ background: "radial-gradient(circle, #F97316 0%, #FDBA74 40%, transparent 70%)", bottom: "5%", right: "10%" }} />
+            <style jsx global>{`
+                @keyframes float-orb-1 {
+                    0%, 100% { transform: translate(0, 0); }
+                    33% { transform: translate(15px, -20px); }
+                    66% { transform: translate(-10px, -10px); }
+                }
+                @keyframes float-orb-2 {
+                    0%, 100% { transform: translate(0, 0); }
+                    50% { transform: translate(-20px, -15px); }
+                }
+                @keyframes float-orb-3 {
+                    0%, 100% { transform: translate(0, 0); }
+                    40% { transform: translate(10px, 15px); }
+                    80% { transform: translate(-15px, 5px); }
+                }
+                @keyframes fade-up {
+                    from { opacity: 0; transform: translateY(24px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fade-up { animation: fade-up 0.7s ease-out forwards; }
+                .delay-1 { animation-delay: 0.1s; opacity: 0; }
+                .delay-2 { animation-delay: 0.2s; opacity: 0; }
+                .delay-3 { animation-delay: 0.3s; opacity: 0; }
+                .delay-4 { animation-delay: 0.4s; opacity: 0; }
+            `}</style>
+
+            {/* ── Sunrise gradient — same as login page ── */}
+            <div className="absolute inset-x-0 top-0 h-full pointer-events-none z-0">
+                <div
+                    className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[140%] h-[100%] blur-[100px] transition-all duration-[2000ms] ease-out"
+                    style={{
+                        background: "radial-gradient(ellipse at top, #F97316 0%, #FFEDD5 25%, #DBEAFE 45%, transparent 70%)",
+                        opacity: mounted ? 0.8 : 0,
+                    }}
+                />
             </div>
 
-            {/* Grid */}
-            <div className="absolute inset-0 pointer-events-none z-0 opacity-[0.035]" style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.3) 1px, transparent 1px)`, backgroundSize: '48px 48px', maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 70%)' }} />
+            {/* ── Floating Orbs ── */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+                {/* Warm orange orb */}
+                <div
+                    className="absolute w-[400px] h-[400px] rounded-full blur-[120px] opacity-25"
+                    style={{
+                        background: "radial-gradient(circle, #F97316 0%, #FDBA74 40%, transparent 70%)",
+                        top: "10%",
+                        right: "15%",
+                        animation: "float-orb-1 10s ease-in-out infinite",
+                    }}
+                />
+                {/* Soft peach orb */}
+                <div
+                    className="absolute w-[300px] h-[300px] rounded-full blur-[100px] opacity-20"
+                    style={{
+                        background: "radial-gradient(circle, #FFEDD5 0%, #FED7AA 40%, transparent 70%)",
+                        bottom: "15%",
+                        left: "10%",
+                        animation: "float-orb-2 12s ease-in-out infinite",
+                    }}
+                />
+                {/* Subtle blue wash */}
+                <div
+                    className="absolute w-[350px] h-[350px] rounded-full blur-[110px] opacity-15"
+                    style={{
+                        background: "radial-gradient(circle, #DBEAFE 0%, #BFDBFE 40%, transparent 70%)",
+                        bottom: "5%",
+                        right: "5%",
+                        animation: "float-orb-3 14s ease-in-out infinite",
+                    }}
+                />
+            </div>
 
-            <div className="relative z-10 w-full max-w-[440px] transition-all duration-[1000ms] ease-out" style={{ transform: mounted ? "translateY(0) scale(1)" : "translateY(40px) scale(0.97)", opacity: mounted ? 1 : 0 }}>
+            {/* ── Dot grid — same as login page ── */}
+            <div
+                className="absolute inset-0 pointer-events-none z-0 opacity-[0.25]"
+                style={{
+                    backgroundImage: `radial-gradient(#A1A1AA 1px, transparent 1px)`,
+                    backgroundSize: '32px 32px',
+                    maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 75%)'
+                }}
+            />
 
-                {/* Branding */}
-                <div className="text-center mb-8">
-                    <h1 className="font-[family-name:var(--font-inter)] text-2xl font-black tracking-tight mb-1">
-                        <span className="text-zinc-900">Lango</span>
-                        <span className="bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">World</span>
-                    </h1>
-                    <span className="font-[family-name:var(--font-inter)] tracking-[0.12em] uppercase font-black text-sm text-zinc-300 block mb-3" style={{ WebkitTextStroke: '1px currentColor', WebkitTextFillColor: 'transparent' }}>Global Voice</span>
-                    <p className="font-[family-name:var(--font-inter)] text-sm text-zinc-400">Choose your unique identity</p>
-                </div>
-
-                {/* Glass Card */}
-                <div className="bg-white/80 backdrop-blur-2xl border border-white/70 rounded-[28px] shadow-2xl shadow-blue-900/[0.05] p-8">
-
-                    {/* Welcome */}
-                    <div className="flex items-center gap-3 mb-6 p-4 bg-gradient-to-r from-blue-50/80 to-orange-50/50 border border-blue-100/50 rounded-2xl">
-                        <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-orange-500 rounded-xl flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
-                            <Sparkles className="w-4 h-4 text-white" />
-                        </div>
-                        <div>
-                            <p className="text-xs font-bold text-zinc-800 mb-0.5">Welcome aboard! 🎉</p>
-                            <p className="text-[11px] font-medium text-zinc-500">Pick a unique username. This can&apos;t be changed later.</p>
-                        </div>
+            {/* ── Left Panel — Branding (desktop) ── */}
+            <div className="hidden lg:flex lg:w-[45%] relative items-center justify-center p-12">
+                <div
+                    className="relative z-10 max-w-md"
+                    style={{
+                        opacity: mounted ? 1 : 0,
+                        transform: mounted ? 'translateX(0)' : 'translateX(-30px)',
+                        transition: 'all 1s cubic-bezier(0.16, 1, 0.3, 1)',
+                    }}
+                >
+                    {/* Branding */}
+                    <div className="mb-10">
+                        <h1 className="font-[family-name:var(--font-inter)] text-6xl font-black tracking-tighter leading-[0.9] mb-2">
+                            <span className="text-zinc-900">LangoWorld</span>
+                        </h1>
+                        <h2
+                            className="font-[family-name:var(--font-inter)] text-4xl font-black tracking-tighter leading-[0.9]"
+                            style={{
+                                WebkitTextStroke: '1.5px #71717A',
+                                color: 'transparent',
+                            }}
+                        >
+                            Global Voice
+                        </h2>
                     </div>
 
-                    {error && (
-                        <div className="mb-4 p-3.5 bg-red-50/80 border border-red-100 rounded-2xl text-sm text-red-600 font-medium flex items-center gap-2">
-                            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />{error}
-                        </div>
-                    )}
+                    <p className="font-[family-name:var(--font-inter)] text-lg text-zinc-500 leading-relaxed mb-8">
+                        You&apos;re almost there! Pick a unique username that will be your identity across the LangoWorld platform.
+                    </p>
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <div>
-                            <label className="block text-[11px] font-bold text-zinc-400 mb-2 uppercase tracking-[0.1em]">Username</label>
-                            <div className={`relative rounded-2xl transition-all duration-300 ring-2 ${borderColor}`}>
-                                <AtSign className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors duration-300 ${available ? 'text-emerald-500' : validationError ? 'text-red-400' : focused ? 'text-blue-500' : 'text-zinc-300'}`} />
-                                <input type="text" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="your_username" required maxLength={20} minLength={3} className="w-full pl-11 pr-12 py-4 bg-zinc-50/60 border-0 rounded-2xl text-sm text-zinc-900 placeholder:text-zinc-300 focus:outline-none transition-all font-[family-name:var(--font-inter)] font-mono tracking-wide" />
-                                <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
-                                    {checking && <Loader2 className="w-4 h-4 text-zinc-400 animate-spin" />}
-                                    {!checking && available === true && <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center shadow-md shadow-emerald-500/30"><Check className="w-3.5 h-3.5 text-white" /></div>}
-                                    {!checking && available === false && <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center shadow-md shadow-red-500/30"><X className="w-3.5 h-3.5 text-white" /></div>}
+                    {/* Feature pills — warm palette */}
+                    <div className="flex flex-wrap gap-2">
+                        {[
+                            "Unique Identity",
+                            "Your Profile",
+                            "Personalized",
+                            "One-time Setup",
+                        ].map((label) => (
+                            <span
+                                key={label}
+                                className="px-4 py-2 bg-white/60 backdrop-blur-sm border border-white/60 rounded-full text-xs font-semibold text-zinc-600 shadow-sm"
+                            >
+                                {label}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Right Panel — Username Form ── */}
+            <div className="flex-1 flex items-center justify-center px-6 py-12 relative z-10">
+                <div className={`w-full max-w-[420px] ${mounted ? 'animate-fade-up' : 'opacity-0'}`}>
+
+                    {/* Mobile branding */}
+                    <div className="lg:hidden text-center mb-8 animate-fade-up delay-1">
+                        <h1 className="font-[family-name:var(--font-inter)] text-3xl font-black tracking-tighter mb-1 text-zinc-900">
+                            LangoWorld
+                        </h1>
+                        <p
+                            className="font-[family-name:var(--font-inter)] text-lg font-black tracking-tighter"
+                            style={{ WebkitTextStroke: '1px #71717A', color: 'transparent' }}
+                        >
+                            Global Voice
+                        </p>
+                    </div>
+
+                    {/* Card header */}
+                    <div className="mb-6 animate-fade-up delay-2">
+                        <h2 className="font-[family-name:var(--font-inter)] text-2xl font-bold text-zinc-900 mb-1">
+                            Choose your username
+                        </h2>
+                        <p className="font-[family-name:var(--font-inter)] text-sm text-zinc-400">
+                            Pick a unique identity for your account
+                        </p>
+                    </div>
+
+                    {/* Glass Card */}
+                    <div className="bg-white/70 backdrop-blur-2xl border border-white/60 rounded-[28px] shadow-2xl shadow-orange-900/[0.06] p-7 animate-fade-up delay-3">
+
+                        {/* Error */}
+                        {error && (
+                            <div className="mb-5 p-3.5 bg-red-50/80 border border-red-100 rounded-2xl text-sm text-red-600 font-medium flex items-center gap-2">
+                                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                                {error}
+                            </div>
+                        )}
+
+                        {/* Username Form */}
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-[11px] font-bold text-zinc-400 mb-1.5 uppercase tracking-[0.1em]">
+                                    Username
+                                </label>
+                                <div className={`relative rounded-2xl transition-all duration-300 ${borderColor}`}>
+                                    <AtSign className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors duration-300 ${available ? 'text-emerald-500' : validationError ? 'text-red-400' : focused ? 'text-orange-500' : 'text-zinc-300'}`} />
+                                    <input
+                                        type="text"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                                        onFocus={() => setFocused(true)}
+                                        onBlur={() => setFocused(false)}
+                                        placeholder="your_username"
+                                        required
+                                        maxLength={20}
+                                        minLength={3}
+                                        className="w-full pl-11 pr-12 py-3.5 bg-white/60 border border-zinc-200/60 rounded-2xl text-sm text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:border-orange-300 transition-all font-[family-name:var(--font-inter)] font-mono tracking-wide"
+                                    />
+                                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                                        {checking && <Loader2 className="w-4 h-4 text-zinc-400 animate-spin" />}
+                                        {!checking && available === true && (
+                                            <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center shadow-md shadow-emerald-500/30">
+                                                <Check className="w-3.5 h-3.5 text-white" />
+                                            </div>
+                                        )}
+                                        {!checking && available === false && (
+                                            <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center shadow-md shadow-red-500/30">
+                                                <X className="w-3.5 h-3.5 text-white" />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Validation message */}
+                                <div className="mt-2 min-h-[20px]">
+                                    {validationError && <p className="text-xs text-red-500 font-semibold">{validationError}</p>}
+                                    {available && !validationError && <p className="text-xs text-emerald-500 font-semibold">✓ Username is available!</p>}
                                 </div>
                             </div>
-                            <div className="mt-2 min-h-[20px]">
-                                {validationError && <p className="text-xs text-red-500 font-semibold">{validationError}</p>}
-                                {available && !validationError && <p className="text-xs text-emerald-500 font-semibold">✓ Username is available!</p>}
+
+                            {/* Rules pills */}
+                            <div className="flex gap-2 text-[11px] text-zinc-300 font-medium">
+                                {["3-20 chars", "a-z, 0-9, _", "Must be unique"].map((rule) => (
+                                    <span key={rule} className="px-2.5 py-1 bg-zinc-100/60 rounded-lg">{rule}</span>
+                                ))}
                             </div>
-                        </div>
 
-                        <div className="flex gap-2 text-[11px] text-zinc-300 font-medium">
-                            {["3-20 chars", "a-z, 0-9, _", "Must be unique"].map((rule) => (
-                                <span key={rule} className="px-2.5 py-1 bg-zinc-100/60 rounded-lg">{rule}</span>
-                            ))}
-                        </div>
+                            {/* Submit — dark, matching login page CTA */}
+                            <button
+                                type="submit"
+                                disabled={!available || saving}
+                                className="w-full flex items-center justify-center gap-2.5 px-4 py-4 bg-zinc-900 hover:bg-zinc-800 text-white rounded-2xl font-[family-name:var(--font-inter)] text-sm font-bold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-zinc-900/20 hover:shadow-2xl hover:shadow-zinc-900/25 active:scale-[0.98] mt-2"
+                            >
+                                {saving ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <>
+                                        Continue to Workspace
+                                        <ArrowRight className="w-4 h-4" />
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                    </div>
 
-                        <button type="submit" disabled={!available || saving} className="w-full flex items-center justify-center gap-2.5 px-4 py-4 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-500 hover:via-blue-600 hover:to-indigo-600 text-white rounded-2xl font-[family-name:var(--font-inter)] text-sm font-bold transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed shadow-xl shadow-blue-700/25 hover:shadow-2xl active:scale-[0.98]">
-                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><span>Continue to Workspace</span><ArrowRight className="w-4 h-4" /></>}
-                        </button>
-                    </form>
+                    {/* Footer */}
+                    <p className="text-center text-[11px] text-zinc-300 mt-5 font-[family-name:var(--font-inter)] animate-fade-up delay-4">
+                        This username cannot be changed later.
+                    </p>
                 </div>
             </div>
         </div>

@@ -43,9 +43,9 @@ export const metadata: Metadata = {
   },
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://langoworld.app"),
   icons: {
-    icon: "/logo-lw.png",
-    shortcut: "/logo-lw.png",
-    apple: "/logo-lw.png",
+    icon: "/favicon-rounded.png",
+    shortcut: "/favicon-rounded.png",
+    apple: "/favicon-rounded.png",
   },
   openGraph: {
     title: "LangoWorld - Multilingual Podcast Generator",

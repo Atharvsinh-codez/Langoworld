@@ -497,9 +497,12 @@ export default function Home() {
             {/* ══════════════════ FEATURES — SpotlightCard Bento Grid ══════════════════ */}
             <FeaturesSection />
 
-            {/* ══════════════════ CTA SECTION ══════════════════ */}
-            <section className="relative py-32 px-6 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-50 to-transparent pointer-events-none" />
+            {/* ══════════════════ CTA + FOOTER — Combined Section ══════════════════ */}
+            <section className="relative pt-32 pb-0 px-6 overflow-hidden">
+                {/* Top gradient fade from page */}
+                <div className="absolute inset-0 bg-gradient-to-t from-transparent to-transparent pointer-events-none" />
+
+                {/* CTA Content */}
                 <div className="relative z-10 max-w-4xl mx-auto text-center">
                     <Ornament className="w-32 h-8 text-zinc-300 mx-auto mb-10 opacity-50" />
 
@@ -514,106 +517,79 @@ export default function Home() {
                         </GlassButton>
                     </div>
                 </div>
-            </section>
 
-            {/* ══════════════════ FOOTER ══════════════════ */}
-            <footer className="relative border-t border-zinc-100 pt-16 pb-8 px-6 bg-white overflow-hidden">
+                {/* ── Footer area — flows naturally from CTA ── */}
+                <footer className="relative mt-32 pb-8">
 
-                {/* ── FOOTER GRADIENT — Sarvam style, animated slide-up ── */}
-                <div className="absolute inset-x-0 bottom-0 h-[400px] overflow-hidden pointer-events-none">
-                    <div
-                        className="absolute left-1/2 w-[120%] h-[100%] transition-all duration-[2500ms] ease-out"
-                        style={{
-                            transform: mounted
-                                ? "translate(-50%, 0%)"
-                                : "translate(-50%, 60%)",
-                            opacity: mounted ? 1 : 0,
-                        }}
-                    >
-                        {/* Centre orange glow */}
+                    {/* ── Footer Gradient — warm sunrise glow ── */}
+                    <div className="absolute inset-x-0 bottom-0 h-[500px] overflow-hidden pointer-events-none">
                         <div
-                            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[35%] h-[100%] blur-[80px] opacity-50"
-                            style={{ background: "linear-gradient(0deg, #F5A44C 0%, #F5C78A 30%, transparent 80%)" }}
-                        />
-                        {/* Left blue wash */}
-                        <div
-                            className="absolute bottom-[5%] left-[8%] w-[40%] h-[80%] rounded-full blur-[90px] opacity-40"
-                            style={{ background: "radial-gradient(circle, #93B5F5 0%, #BDD1FC 40%, transparent 70%)" }}
-                        />
-                        {/* Right blue wash */}
-                        <div
-                            className="absolute bottom-[5%] right-[8%] w-[40%] h-[80%] rounded-full blur-[90px] opacity-40"
-                            style={{ background: "radial-gradient(circle, #93B5F5 0%, #BDD1FC 40%, transparent 70%)" }}
-                        />
+                            className="absolute left-1/2 w-[120%] h-[100%] transition-all duration-[2500ms] ease-out"
+                            style={{
+                                transform: mounted
+                                    ? "translate(-50%, 0%)"
+                                    : "translate(-50%, 60%)",
+                                opacity: mounted ? 1 : 0,
+                            }}
+                        >
+                            {/* Centre orange glow */}
+                            <div
+                                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[35%] h-[100%] blur-[80px] opacity-50"
+                                style={{ background: "linear-gradient(0deg, #F5A44C 0%, #F5C78A 30%, transparent 80%)" }}
+                            />
+                            {/* Left blue wash */}
+                            <div
+                                className="absolute bottom-[5%] left-[8%] w-[40%] h-[80%] rounded-full blur-[90px] opacity-40"
+                                style={{ background: "radial-gradient(circle, #93B5F5 0%, #BDD1FC 40%, transparent 70%)" }}
+                            />
+                            {/* Right blue wash */}
+                            <div
+                                className="absolute bottom-[5%] right-[8%] w-[40%] h-[80%] rounded-full blur-[90px] opacity-40"
+                                style={{ background: "radial-gradient(circle, #93B5F5 0%, #BDD1FC 40%, transparent 70%)" }}
+                            />
+                        </div>
                     </div>
-                </div>
 
-                {/* Footer Content */}
-                <div className="relative z-10 max-w-6xl mx-auto">
-                    {/* Top row — brand + link columns */}
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-16">
-                        {/* Brand */}
-                        <div className="col-span-2 md:col-span-1">
-                            <span className="font-[family-name:var(--font-inter)] text-2xl font-black text-zinc-900 tracking-tighter block mb-2">
-                                LangoWorld
-                            </span>
-                            <p className="font-[family-name:var(--font-inter)] text-sm text-zinc-500 font-medium">
-                                AI for everyone starts here
+                    {/* Footer Content */}
+                    <div className="relative z-10 max-w-6xl mx-auto">
+                        {/* Subtle divider — thin gradient line instead of hard border */}
+                        <div className="h-px bg-gradient-to-r from-transparent via-zinc-200/50 to-transparent mb-16" />
+
+                        {/* Brand + Socials row */}
+                        <div className="flex flex-col sm:flex-row items-start justify-between gap-10 mb-16">
+                            {/* Brand */}
+                            <div>
+                                <span className="font-[family-name:var(--font-inter)] text-2xl font-black text-zinc-900 tracking-tighter block mb-2">
+                                    LangoWorld
+                                </span>
+                                <p className="font-[family-name:var(--font-inter)] text-sm text-zinc-500 font-medium">
+                                    AI for everyone starts here
+                                </p>
+                            </div>
+
+                            {/* Socials — horizontal on desktop */}
+                            <div>
+                                <h4 className="font-[family-name:var(--font-inter)] text-sm font-bold text-zinc-900 mb-4 uppercase tracking-wider">Socials</h4>
+                                <ul className="flex gap-5 font-[family-name:var(--font-inter)] text-sm text-zinc-500 font-medium">
+                                    <li><a href="https://www.athrix.me/" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-900 transition-colors">Portfolio</a></li>
+                                    <li><a href="https://github.com/Atharvsinh-codez" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-900 transition-colors">GitHub</a></li>
+                                    <li><a href="https://x.com/athrix_codes" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-900 transition-colors">X</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {/* Bottom row — copyright */}
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-zinc-200/30">
+                            <p className="font-[family-name:var(--font-inter)] text-sm font-medium text-zinc-400">
+                                Copyright LangoWorld {new Date().getFullYear()}
+                            </p>
+                            <p className="font-[family-name:var(--font-inter)] text-sm font-medium text-zinc-400">
+                                All rights reserved.
                             </p>
                         </div>
-
-                        {/* Products */}
-                        <div>
-                            <h4 className="font-[family-name:var(--font-inter)] text-sm font-bold text-zinc-900 mb-4 uppercase tracking-wider">Products</h4>
-                            <ul className="space-y-3 font-[family-name:var(--font-inter)] text-sm text-zinc-500 font-medium">
-                                <li><Link href="/workspace" className="hover:text-zinc-900 transition-colors">Workspace</Link></li>
-                                <li><Link href="#" className="hover:text-zinc-900 transition-colors">Translation</Link></li>
-                                <li><Link href="#" className="hover:text-zinc-900 transition-colors">YouTube AI</Link></li>
-                            </ul>
-                        </div>
-
-                        {/* API */}
-                        <div>
-                            <h4 className="font-[family-name:var(--font-inter)] text-sm font-bold text-zinc-900 mb-4 uppercase tracking-wider">API</h4>
-                            <ul className="space-y-3 font-[family-name:var(--font-inter)] text-sm text-zinc-500 font-medium">
-                                <li><Link href="#" className="hover:text-zinc-900 transition-colors">Text to Speech</Link></li>
-                                <li><Link href="#" className="hover:text-zinc-900 transition-colors">Speech to Text</Link></li>
-                                <li><Link href="#" className="hover:text-zinc-900 transition-colors">API Pricing</Link></li>
-                            </ul>
-                        </div>
-
-                        {/* Company */}
-                        <div>
-                            <h4 className="font-[family-name:var(--font-inter)] text-sm font-bold text-zinc-900 mb-4 uppercase tracking-wider">Company</h4>
-                            <ul className="space-y-3 font-[family-name:var(--font-inter)] text-sm text-zinc-500 font-medium">
-                                <li><Link href="/about" className="hover:text-zinc-900 transition-colors">About us</Link></li>
-                                <li><Link href="#" className="hover:text-zinc-900 transition-colors">Terms of Service</Link></li>
-                                <li><Link href="#" className="hover:text-zinc-900 transition-colors">Privacy Policy</Link></li>
-                            </ul>
-                        </div>
-
-                        {/* Socials */}
-                        <div>
-                            <h4 className="font-[family-name:var(--font-inter)] text-sm font-bold text-zinc-900 mb-4 uppercase tracking-wider">Socials</h4>
-                            <ul className="space-y-3 font-[family-name:var(--font-inter)] text-sm text-zinc-500 font-medium">
-                                <li><Link href="#" className="hover:text-zinc-900 transition-colors">LinkedIn</Link></li>
-                                <li><Link href="#" className="hover:text-zinc-900 transition-colors">Twitter</Link></li>
-                                <li><Link href="#" className="hover:text-zinc-900 transition-colors">YouTube</Link></li>
-                            </ul>
-                        </div>
                     </div>
-
-                    {/* Bottom row — copyright */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-zinc-200/60">
-                        <p className="font-[family-name:var(--font-inter)] text-sm font-medium text-zinc-400">
-                            Copyright LangoWorld {new Date().getFullYear()}
-                        </p>
-                        <p className="font-[family-name:var(--font-inter)] text-sm font-medium text-zinc-400">
-                            All rights reserved.
-                        </p>
-                    </div>
-                </div>
-            </footer>
+                </footer>
+            </section>
         </div>
     )
 }
