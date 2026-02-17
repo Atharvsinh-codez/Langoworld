@@ -82,7 +82,8 @@ export default function UsernamePage() {
     return (
         <div className="min-h-screen bg-[#FAFAF9] overflow-hidden selection:bg-orange-100 selection:text-orange-900 flex">
 
-            <style jsx global>{`
+            <style dangerouslySetInnerHTML={{
+                __html: `
                 @keyframes float-orb-1 {
                     0%, 100% { transform: translate(0, 0); }
                     33% { transform: translate(15px, -20px); }
@@ -106,7 +107,7 @@ export default function UsernamePage() {
                 .delay-2 { animation-delay: 0.2s; opacity: 0; }
                 .delay-3 { animation-delay: 0.3s; opacity: 0; }
                 .delay-4 { animation-delay: 0.4s; opacity: 0; }
-            `}</style>
+            ` }} />
 
             {/* ── Sunrise gradient — same as login page ── */}
             <div className="absolute inset-x-0 top-0 h-full pointer-events-none z-0">

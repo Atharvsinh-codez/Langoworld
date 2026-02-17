@@ -250,9 +250,10 @@ function FeaturesSection() {
                 {/* ── Card Grid — 3 columns ── */}
                 <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {features.map((f, i) => (
-                        <div
+                        <Link
                             key={i}
-                            className={`feature-card group relative flex flex-col justify-between p-7 sm:p-8 rounded-2xl bg-white border border-zinc-100 ${f.border} transition-all duration-400 ease-out hover:-translate-y-[3px] hover:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)] cursor-default`}
+                            href="/login"
+                            className={`feature-card group relative flex flex-col justify-between p-7 sm:p-8 rounded-2xl bg-white border border-zinc-100 ${f.border} transition-all duration-400 ease-out hover:-translate-y-[3px] hover:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)] cursor-pointer no-underline`}
                         >
                             {/* Icon */}
                             <div>
@@ -278,7 +279,7 @@ function FeaturesSection() {
                                 </span>
                                 <ChevronRight className="w-3.5 h-3.5 text-zinc-300 group-hover:text-zinc-500 group-hover:translate-x-0.5 transition-all duration-300" />
                             </div>
-                        </div>
+                        </Link>
                     ))}
 
                     {/* ── CTA Card — Dark ── */}
@@ -512,7 +513,7 @@ export default function Home() {
                     </h2>
 
                     <div className="flex justify-center mt-12">
-                        <GlassButton href="/workspace">
+                        <GlassButton href="/login">
                             Launch Workspace <ArrowRight className="w-4 h-4 ml-1" />
                         </GlassButton>
                     </div>

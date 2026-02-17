@@ -25,8 +25,9 @@ CORS(app)
 # All language codes supported by the LangoWorld project
 SUPPORTED_LANG_CODES = {
     "en", "es", "fr", "de", "it", "pt", "nl", "pl", "ru",
-    "ja", "ko", "zh-cn", "zh-tw", "ar", "hi", "tr", "sv",
-    "no", "da", "fi", "gu",
+    "ja", "ko", "zh", "ar", "hi", "pa", "bn", "ta", "te",
+    "mr", "ur", "gu", "tr", "sv", "no", "da", "fi",
+    "th", "vi", "id", "ms", "uk", "cs",
 }
 
 # Map langdetect codes to our project codes
