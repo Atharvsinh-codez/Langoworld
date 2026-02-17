@@ -822,6 +822,14 @@ function TranslationResultNode({ data }: { data: any }) {
 function TranslationHistoryNode({ data }: { data: any }) {
   const entries: TranslationHistoryGroup[] = data.entries || []
   const [expanded, setExpanded] = React.useState<number | null>(null)
+  const [copiedIdx, setCopiedIdx] = React.useState<string | null>(null)
+
+  const handleCopy = React.useCallback((text: string, id: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedIdx(id)
+      setTimeout(() => setCopiedIdx(null), 1500)
+    })
+  }, [])
 
   if (entries.length === 0) return null
 
@@ -865,13 +873,46 @@ function TranslationHistoryNode({ data }: { data: any }) {
 
             {expanded === i && (
               <div className="mt-2 space-y-1.5">
-                {group.results.map((r, j) => (
-                  <div key={j} className="bg-zinc-50 dark:bg-zinc-800 rounded-lg px-3 py-2">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <span className="text-sm">{r.flag}</span>
-                      <span className="text-[10px] font-semibold text-zinc-500 uppercase">{r.langName}</span>
+                {/* Source text with copy */}
+                {group.results[0]?.sourceText && (
+                  <div className="bg-blue-50/50 dark:bg-blue-950/20 rounded-lg px-3 py-2 flex items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[10px] font-semibold text-blue-500 uppercase">Source</span>
+                      <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2">{group.results[0].sourceText}</p>
                     </div>
-                    <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2">{r.translatedText}</p>
+                    <button
+                      onClick={() => handleCopy(group.results[0].sourceText, `src-${i}`)}
+                      className="p-1 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors flex-shrink-0 mt-1"
+                      title="Copy source text"
+                    >
+                      {copiedIdx === `src-${i}`
+                        ? <Check className="w-3.5 h-3.5 text-emerald-500" />
+                        : <Copy className="w-3.5 h-3.5 text-zinc-400 hover:text-zinc-600" />
+                      }
+                    </button>
+                  </div>
+                )}
+
+                {/* Translation results with copy */}
+                {group.results.map((r, j) => (
+                  <div key={j} className="bg-zinc-50 dark:bg-zinc-800 rounded-lg px-3 py-2 flex items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-sm">{r.flag}</span>
+                        <span className="text-[10px] font-semibold text-zinc-500 uppercase">{r.langName}</span>
+                      </div>
+                      <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2">{r.translatedText}</p>
+                    </div>
+                    <button
+                      onClick={() => handleCopy(r.translatedText, `${i}-${j}`)}
+                      className="p-1 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors flex-shrink-0 mt-1"
+                      title="Copy translation"
+                    >
+                      {copiedIdx === `${i}-${j}`
+                        ? <Check className="w-3.5 h-3.5 text-emerald-500" />
+                        : <Copy className="w-3.5 h-3.5 text-zinc-400 hover:text-zinc-600" />
+                      }
+                    </button>
                   </div>
                 ))}
                 <button
