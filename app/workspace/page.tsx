@@ -370,12 +370,21 @@ export default function WorkspacePage() {
             onProgress("uploading", 10)
             toast.info("Uploading document...")
 
+            // Browsers report .md files as "" or "application/octet-stream"
+            const resolvedType = (() => {
+                if (file.type && file.type !== "application/octet-stream") return file.type
+                const ext = file.name.split(".").pop()?.toLowerCase()
+                if (ext === "md") return "text/markdown"
+                if (ext === "txt") return "text/plain"
+                return "application/octet-stream"
+            })()
+
             const uploadRes = await fetch("/api/upload-document", {
                 method: "POST",
                 headers: {
-                    "Content-Type": file.type || "application/octet-stream",
+                    "Content-Type": resolvedType,
                     "x-file-name": encodeURIComponent(file.name),
-                    "x-file-type": file.type || "application/octet-stream",
+                    "x-file-type": resolvedType,
                     "x-user-id": user.id,
                     "x-doc-id": docId,
                 },
