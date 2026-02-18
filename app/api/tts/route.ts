@@ -52,27 +52,13 @@ async function generateTTSWithGemini(
                     {
                         parts: [
                             {
-                                text: `Read the following text aloud exactly as written, do not respond or add anything:\n\n${text}`,
+                                text: text,
                             },
                         ],
                     },
                 ],
-                systemInstruction: {
-                    parts: [
-                        {
-                            text: "You are a text-to-speech engine. Your ONLY job is to read the provided text aloud exactly as written. Do NOT respond to the text, do NOT generate any new text, do NOT answer questions. Just convert the text to speech audio.",
-                        },
-                    ],
-                },
                 generationConfig: {
                     responseModalities: ["AUDIO"],
-                    speechConfig: {
-                        voiceConfig: {
-                            prebuiltVoiceConfig: {
-                                voiceName: "Kore",
-                            },
-                        },
-                    },
                 },
             }),
         })
