@@ -50,7 +50,7 @@ def detect_language():
     Detect the language of input text using Google's langdetect.
 
     Body: { "text": "some text to detect" }
-    Returns: { "code": "pt", "confidence": 0.99 }
+    Returns: { "code": "gu", "confidence": 0.99 }
     """
     try:
         data = request.get_json()
@@ -73,8 +73,12 @@ def detect_language():
         # Map to our project codes (e.g. zh-cn → zh)
         mapped_code = LANG_CODE_MAP.get(detected_code, detected_code)
 
-        # Log for debugging
-        logging.info(f"[Detect] '{text[:50]}...' → {detected_code} ({confidence}) → mapped: {mapped_code}")
+        # If not in our supported list, fall back to English
+        if mapped_code not in SUPPORTED_LANG_CODES:
+            logging.info(f"[Detect] '{text[:50]}' → {detected_code} ({confidence}) — unsupported, fallback to en")
+            return jsonify({"code": "en", "confidence": 0.0, "reason": "unsupported language"})
+
+        logging.info(f"[Detect] '{text[:50]}' → {detected_code} ({confidence}) → mapped: {mapped_code}")
 
         return jsonify({
             "code": mapped_code,
@@ -104,29 +108,12 @@ def get_transcript():
     if not url:
         return jsonify({"error": "YouTube URL is required"}), 400
 
-    video_id = get_video_id(url)
-    if not video_id:
-        return jsonify({"error": "Invalid YouTube URL"}), 400
+    result = get_youtube_transcript(url)
 
-    logging.info(f"Processing video: {video_id}")
+    if "error" in result:
+        return jsonify(result), 400
 
-    # Step 1: Get video info
-    video_info = get_video_info(url)
-    logging.info(f"Title: {video_info['title']}")
-
-    # Step 2: Try fetching captions transcript
-    transcript, lang = get_youtube_transcript(url)
-
-    if transcript:
-        logging.info(f"Got transcript ({lang}): {len(transcript)} chars")
-        return jsonify({
-            "transcript": transcript,
-            "lang": lang or "auto",
-            "video_info": video_info,
-            "method": "captions",
-        })
-
-    return jsonify({"error": "No captions found for this video"}), 422
+    return jsonify(result)
 
 
 @app.route("/api/video-info", methods=["POST"])

@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text: text.trim() }),
-            signal: AbortSignal.timeout(5000), // 5s timeout — never hang
+            signal: AbortSignal.timeout(5000),
         })
 
         if (!response.ok) {
@@ -29,7 +29,6 @@ export async function POST(request: NextRequest) {
             confidence: data.confidence ?? 0,
         })
     } catch (error) {
-        // If Python server is unreachable, return English fallback — NEVER crash
         console.warn("[detect-language] Fallback to English:", error)
         return NextResponse.json({ code: "en", confidence: 0 })
     }
