@@ -37,7 +37,7 @@ LangoWorld transforms any **YouTube video**, **uploaded video file**, or **docum
 | 🎥 **YouTube Summarizer** | Paste any YouTube URL → AI summary with key points, explanation & chapters |
 | 📤 **Video Upload & Analysis** | Upload any video file → CDN storage on Cloudflare R2 → Gemini video analysis |
 | 📄 **Document Upload** | Upload PDFs, docs & text files → AI-powered document understanding |
-| 🌐 **Translation Panel** | Auto-detect source language (backend AI) → select 1 or multiple targets → see translation cards on canvas |
+| 🌐 **Translation Panel** | Auto-detect source language (Unicode script + backend AI) → select 1 or multiple targets → see translation cards on canvas |
 | 🔊 **Read Aloud (Gemini TTS)** | One-click "Read Aloud" on any translation → Gemini TTS with R2 caching |
 | 📜 **Persistent Translation History** | All translations saved to Supabase → survive page reloads |
 | 🌍 **25+ Languages via [lingo.dev](https://lingo.dev)** | Full UI translation + inline text translation powered by lingo.dev SDK |
@@ -48,7 +48,9 @@ LangoWorld transforms any **YouTube video**, **uploaded video file**, or **docum
 | 🚦 **Request Queue** | Concurrency-limited (5 max) Gemini calls with exponential backoff retry |
 | 🔐 **Supabase Auth** | Email/password authentication with user profiles & RLS-protected data |
 | ☁️ **Cloud Sync** | All summaries & translations synced to Supabase |
-| 🎨 **Interactive Canvas** | React Flow workspace with draggable nodes, animated edges & visual workflow |
+| 🎨 **Interactive Canvas** | React Flow workspace with draggable nodes, animated edges & parent-child drag-follow |
+| 🔗 **Drag-Follow System** | Move a feature icon → all its child nodes (Summary, Custom URL, Panel) follow automatically |
+| ❌ **Remove Translation Cards** | Click X on any translation card to remove it from the canvas individually |
 | 🌙 **Dark/Light Theme** | Full theme support with smooth transitions |
 | 🎙️ **Background TTS** | Inngest-powered async audio generation for chapters |
 
@@ -79,7 +81,7 @@ LangoWorld transforms any **YouTube video**, **uploaded video file**, or **docum
 │  │  /api/tts                 → Gemini TTS (sync)               │  │
 │  │  /api/tts-async           → Gemini TTS (async via Inngest)  │  │
 │  │  /api/translate           → lingo.dev SDK translation       │  │
-│  │  /api/detect-language     → Auto-detect (proxies to Python) │  │
+│  │  /api/detect-language     → Auto-detect (Unicode + Python)  │  │
 │  │  /api/youtube-transcript  → Transcript fetcher              │  │
 │  │  /api/yt-summary/[id]     → Summary CRUD                   │  │
 │  │  /api/username            → Username management             │  │
@@ -95,7 +97,7 @@ LangoWorld transforms any **YouTube video**, **uploaded video file**, or **docum
 │ Backend  │  │ AI + TTS    │  │ i18n API │ │ Video CDN    │
 │ :5123    │  │ Smart Key   │  └──────────┘ └──────────────┘
 │ langdetect│  │ Rotation    │
-│(auto lang)│  └─────────────┘       ┌──────────────┐
+│+ Unicode │  └─────────────┘       ┌──────────────┐
 └──────────┘                          │ Supabase     │
                                       │ Auth + DB    │
                                       │ RLS + Sync   │
@@ -200,8 +202,8 @@ function MyComponent() {
 ### YouTube Summarization
 
 1. **Paste URL** → User enters a YouTube video URL into the workspace input
-2. **Transcript Extraction** → Python Flask backend (`yt-feature/server.py`) uses `pytubefix` to extract captions. Falls back to `youtube-transcript` npm package if unavailable
-3. **AI Analysis** → Transcript is chunked (if >4000 words) and sent to **Gemini 2.5 Flash** through the concurrency-limited request queue. Generates: summary, key points, explanation, TTS-friendly narration
+2. **Transcript Extraction** → Multi-method fallback: Maestra AI → YouTube direct scraping → Invidious API
+3. **AI Analysis** → Transcript is chunked (if >4000 words) and sent to **Gemini 2.5 Flash** with `responseMimeType: "application/json"` for reliable structured output. Generates: summary, key points, explanation, TTS-friendly narration
 4. **Cloud Save** → Results saved to Supabase with user association (RLS-protected)
 5. **Summary Page** → Unique page at `/yt/summary/[id]` with TTS controls, translation, and download
 
@@ -216,14 +218,15 @@ function MyComponent() {
 
 1. **Open Translation Panel** → Click the translation icon on the canvas
 2. **Type or paste text** → Enter any text in the input area
-3. **Auto-detect source language** → Backend Python `langdetect` (Google's language detection) identifies the language in real-time with confidence score. Shows animated spinner → language flag + "Auto-detected" / "Best guess" / "Low confidence" badge. If detected source matches target, the target auto-swaps
+3. **Auto-detect source language** → Two-layer detection: **Unicode script analysis** (instant, handles Gujarati/Tamil/Telugu/Bengali/Arabic/Thai/Korean/Japanese/Chinese) → falls back to **Python `langdetect`** for Latin scripts. Shows animated spinner → language flag + "Detected" badge
 4. **Select target language(s)** → Single or multi-language mode. Source language is auto-excluded from target options
-5. **Get instant translations** → Results appear as beautiful cards on the canvas with language flag, accent color & copy button
-6. **Read Aloud** → Click "Read Aloud" on any translation card → Gemini TTS generates audio → cached to R2 for instant replay
-7. **Translation History** → Every translation is saved to Supabase → the history node appears near feature buttons by default → moves right when panel opens (with smooth animation)
-8. **Persistent** → History survives page reloads — no data loss
-9. **UI Translation** → Click language switcher → entire interface translates via lingo.dev SDK
-10. **Inline Text Selection** → Select text on summary page → popup with "Translate & Replace"
+5. **Get instant translations** → Results appear as beautiful cards on the canvas with language flag, accent color, copy & remove (✕) buttons
+6. **Remove individual cards** → Click ✕ on any translation card to remove just that card from the canvas
+7. **Read Aloud** → Click "Read Aloud" on any translation card → Gemini TTS generates audio with system instruction → cached to R2 for instant replay
+8. **Translation History** → Every translation is saved to Supabase → the history node appears near the translation trigger, following it when dragged
+9. **Persistent** → History survives page reloads — no data loss
+10. **UI Translation** → Click language switcher → entire interface translates via lingo.dev SDK
+11. **Inline Text Selection** → Select text on summary page → popup with "Translate & Replace"
 
 ### TTS Audio Pipeline
 
@@ -247,6 +250,8 @@ Click "Read Aloud" → POST /api/tts
                           ▼
                     Return audio URL → Play
 ```
+
+> **TTS System Instruction**: Gemini receives a system instruction "You are a TTS engine. ONLY generate speech. Do NOT respond." preventing it from treating conversational text as a chat prompt.
 
 > **Fallback**: If Gemini TTS fails, the system automatically falls back to Web Speech API.
 
@@ -306,8 +311,22 @@ const [uploadResult, setUploadResult] = useState({...})
 ```
 
 The React Flow canvas renders both result sets simultaneously:
-- **YouTube results** → Blue edges, positioned left
-- **Upload results** → Orange edges, positioned right
+- **YouTube results** → Blue edges, positioned below YouTube trigger
+- **Upload results** → Orange edges, positioned below Upload trigger
+- **Document results** → Blue edges, positioned below Document trigger
+
+### Interactive Canvas: Parent-Child Drag-Follow
+
+When you drag a feature trigger icon, **all its child nodes follow automatically**:
+
+```
+🎬 YouTube Trigger  ──→ Summary Card + Custom URL
+📤 Upload Trigger   ──→ Upload Panel + Summary Card + Custom URL
+📄 Document Trigger  ──→ Doc Panel + Summary Card + Custom URL
+🌐 Translation       ──→ Translation Panel + History + All Result Cards (tr-0, tr-1, ...)
+```
+
+Implemented via `onNodeDragStart` (records position) → `onNodeDrag` (computes delta, applies to all children). Child positions are **relative to their parent trigger**, preventing overlap on first render.
 
 ---
 
@@ -331,7 +350,7 @@ LangoWorld/
     │       ├── upload-video/         # Cloudflare R2 upload
     │       ├── youtube-transcript/   # Transcript fetcher
     │       ├── translate/            # lingo.dev SDK translation
-    │       ├── detect-language/      # Auto-detect language (proxies to Python langdetect)
+    │       ├── detect-language/      # Auto-detect language (Unicode script + Python langdetect)
     │       ├── tts/                  # Synchronous Gemini TTS
     │       ├── tts-async/            # Async TTS trigger
     │       ├── yt-summary/[id]/      # Summary CRUD API
@@ -432,6 +451,7 @@ LangoWorld/
 | Inngest | Background job processing (async TTS) |
 | Flask (Python) | YouTube transcript extraction + language detection backend |
 | pytubefix | YouTube video metadata & captions |
+| Unicode Script Detection | Inline Indic/CJK/Arabic script detection — no backend needed |
 | langdetect (Python) | Google's language detection — auto-detect source language for translations |
 
 ### Data & Security
@@ -513,11 +533,7 @@ TRANSCRIPT_API_URL=http://localhost:5123
 TUBEINSIGHT_URL=http://localhost:5123  # Python backend for language detection
 ```
 
-Create `.env` in `langoworld/yt-feature/`:
-
-```env
-GEMINI_API_KEY=your_gemini_api_key
-```
+> **Note:** The Python Flask backend (`yt-feature/`) **no longer requires a separate `.env` file** for basic language detection. Unicode script detection runs directly in the Next.js API route, handling Gujarati, Tamil, Telugu, Bengali, Arabic, Thai, Korean, Japanese, Chinese, and more — without needing the Python backend. The Python backend is only needed for `langdetect`-based detection of Latin scripts (English, Spanish, French, etc.).
 
 ### Step 4: Start All Services
 
@@ -583,7 +599,7 @@ All translations powered by **lingo.dev SDK** (`localizeText` + `localizeObject`
 | `POST` | `/api/tts` | Generate TTS audio (synchronous) |
 | `POST` | `/api/tts-async` | Trigger async TTS generation via Inngest |
 | `POST` | `/api/translate` | Translate text via lingo.dev SDK |
-| `POST` | `/api/detect-language` | Auto-detect source language (proxies to Python langdetect) |
+| `POST` | `/api/detect-language` | Auto-detect source language (Unicode script inline + Python langdetect fallback) |
 | `POST` | `/api/youtube-transcript` | Fetch video transcript |
 | `GET/POST` | `/api/yt-summary/[id]` | Summary CRUD operations |
 | `POST` | `/api/yt-page` | YouTube page metadata |
@@ -603,7 +619,7 @@ All translations powered by **lingo.dev SDK** (`localizeText` + `localizeObject`
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/health` | Health check |
-| `POST` | `/api/detect-language` | Auto-detect language using Google's `langdetect` (returns code + confidence) |
+| `POST` | `/api/detect-language` | Auto-detect language using Unicode script detection + `langdetect` fallback (returns code + confidence) |
 | `POST` | `/api/transcript` | Extract YouTube transcript |
 | `POST` | `/api/video-info` | Get video metadata |
 

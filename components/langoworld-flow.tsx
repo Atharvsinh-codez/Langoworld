@@ -24,7 +24,7 @@ import { UploadInput, UploadPanel } from "@/components/workspace/upload-input"
 import { DocumentInput, DocumentPanel } from "@/components/workspace/document-input"
 import { TranslationInput } from "@/components/workspace/translation-input"
 import { TranslationPanel } from "@/components/workspace/translation-panel"
-import { Brain, Sparkles, ExternalLink, CheckCircle2, Link2, Pencil, Check, AlertCircle, Clock, Video, Film, History, Download, Loader2, Trash2, Languages, Copy, Volume2 } from "lucide-react"
+import { Brain, Sparkles, ExternalLink, CheckCircle2, Link2, Pencil, Check, AlertCircle, Clock, Video, Film, History, Download, Loader2, Trash2, Languages, Copy, Volume2, X } from "lucide-react"
 import Link from "next/link"
 import type { HistoryEntry } from "@/lib/history-store"
 import { createClient } from "@/lib/supabase-browser"
@@ -78,6 +78,7 @@ interface WorkspaceFlowProps {
   translationHistory?: TranslationHistoryGroup[]
   onClearTranslationHistory?: (index: number) => void
   onClearTranslationResults?: () => void
+  onRemoveTranslationResult?: (index: number) => void
   history?: HistoryEntry[]
   onDeleteHistory?: (entryId: string) => void
 }
@@ -759,6 +760,17 @@ function TranslationResultNode({ data }: { data: any }) {
             : <Copy className="w-4.5 h-4.5 text-zinc-400" />
           }
         </button>
+
+        {/* Remove button */}
+        {data.onRemove && (
+          <button
+            onClick={data.onRemove}
+            className="p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-200 hover:scale-110 active:scale-95"
+            title="Remove"
+          >
+            <X className="w-4 h-4 text-zinc-400 hover:text-red-500 transition-colors" />
+          </button>
+        )}
       </div>
 
       {/* Translated text */}
@@ -975,6 +987,7 @@ export function LangoWorldFlow({
   translationHistory = [],
   onClearTranslationHistory,
   onClearTranslationResults,
+  onRemoveTranslationResult,
   history = [],
   onDeleteHistory,
 }: WorkspaceFlowProps) {
@@ -985,6 +998,65 @@ export function LangoWorldFlow({
   const [showUploadPanel, setShowUploadPanel] = React.useState(false)
   const [showDocPanel, setShowDocPanel] = React.useState(false)
   const [showTranslationPanel, setShowTranslationPanel] = React.useState(false)
+
+  // ── Parent → Children node grouping ──
+  // When a parent node is dragged, all children follow with the same delta
+  // This needs to be dynamic because panels and translation results are added/removed
+  const getChildIds = React.useCallback((parentId: string, currentNodes: Node[]): string[] => {
+    const staticMap: Record<string, string[]> = {
+      "youtube-trigger": ["yt-summary-page", "yt-rename-node"],
+      "upload-trigger": ["upload-panel", "upload-summary-page", "upload-rename-node"],
+      "doc-trigger": ["doc-panel", "doc-summary-page", "doc-rename-node"],
+      "translation-trigger": ["translation-panel", "translation-history"],
+    }
+
+    const candidates = staticMap[parentId] || []
+
+    // For translation-trigger, also include all tr-* result nodes
+    if (parentId === "translation-trigger") {
+      currentNodes.forEach(n => {
+        if (n.id.startsWith("tr-")) candidates.push(n.id)
+      })
+    }
+
+    // Only return children that actually exist in current nodes
+    const nodeIds = new Set(currentNodes.map(n => n.id))
+    return candidates.filter(id => nodeIds.has(id))
+  }, [])
+
+  // Track last-known positions for computing drag deltas
+  const lastDragPos = React.useRef<Record<string, { x: number; y: number }>>({})
+
+  const onNodeDrag = React.useCallback((_event: React.MouseEvent, node: Node) => {
+    const prev = lastDragPos.current[node.id]
+    if (!prev) return
+
+    const dx = node.position.x - prev.x
+    const dy = node.position.y - prev.y
+
+    if (dx === 0 && dy === 0) return
+
+    setNodes(nds => {
+      const childIds = getChildIds(node.id, nds)
+      if (childIds.length === 0) {
+        lastDragPos.current[node.id] = { x: node.position.x, y: node.position.y }
+        return nds
+      }
+      const childSet = new Set(childIds)
+      const updated = nds.map(n => {
+        if (childSet.has(n.id)) {
+          return { ...n, position: { x: n.position.x + dx, y: n.position.y + dy } }
+        }
+        return n
+      })
+      lastDragPos.current[node.id] = { x: node.position.x, y: node.position.y }
+      return updated
+    })
+  }, [getChildIds, setNodes])
+
+  const onNodeDragStart = React.useCallback((_event: React.MouseEvent, node: Node) => {
+    lastDragPos.current[node.id] = { x: node.position.x, y: node.position.y }
+  }, [])
 
   // Store callbacks in refs so they don't trigger useEffect re-runs
   const onYoutubeSubmitRef = React.useRef(onYoutubeSubmit)
@@ -1035,7 +1107,7 @@ export function LangoWorldFlow({
       const brandNode: Node = {
         id: "brand-text",
         type: "brandText",
-        position: pos("brand-text", { x: -120, y: -220 }),
+        position: pos("brand-text", { x: -50, y: -220 }),
         data: {},
         draggable: true,
         selectable: false,
@@ -1045,7 +1117,7 @@ export function LangoWorldFlow({
       const uploadNode: Node = {
         id: "upload-trigger",
         type: "uploadInput",
-        position: pos("upload-trigger", { x: 120, y: 0 }),
+        position: pos("upload-trigger", { x: 160, y: 0 }),
         data: {
           label: "Upload Video",
           onTogglePanel: () => {
@@ -1064,7 +1136,7 @@ export function LangoWorldFlow({
       const docNode: Node = {
         id: "doc-trigger",
         type: "documentInput",
-        position: pos("doc-trigger", { x: 240, y: 0 }),
+        position: pos("doc-trigger", { x: 320, y: 0 }),
         data: {
           label: "Upload Document",
           onTogglePanel: () => {
@@ -1082,7 +1154,7 @@ export function LangoWorldFlow({
       const translationNode: Node = {
         id: "translation-trigger",
         type: "translationInput",
-        position: pos("translation-trigger", { x: 360, y: 0 }),
+        position: pos("translation-trigger", { x: 480, y: 0 }),
         data: {
           label: "Translation",
           onTogglePanel: () => {
@@ -1097,15 +1169,16 @@ export function LangoWorldFlow({
       }
       newNodes.push(translationNode)
 
-      // ── Translation result nodes (fixed 3-column grid below trigger) ──
+      // ── Translation result nodes (grid relative to translation-trigger) ──
       // Uses stable index-based IDs (tr-0, tr-1, ...) so positions survive re-renders
       if (translationResults.length > 0) {
+        const trPos = pos("translation-trigger", { x: 480, y: 0 })
         const COLS = 3
-        const CARD_W = 320   // horizontal spacing between cards
-        const CARD_H = 250   // vertical spacing between rows (more breathing room)
-        // Grid origin: well below the panel (panel is at x:440, ~650px tall)
-        const GRID_X = 200
-        const GRID_Y = showTranslationPanel ? 700 : 200
+        const CARD_W = 360   // horizontal spacing between cards
+        const CARD_H = 300   // vertical spacing between rows
+        // Grid origin: below the trigger, offset left for centering
+        const GRID_X = trPos.x - 400
+        const GRID_Y = trPos.y + (showTranslationPanel ? 750 : 200)
 
         translationResults.forEach((result, index) => {
           const col = index % COLS
@@ -1123,6 +1196,7 @@ export function LangoWorldFlow({
               langName: result.langName,
               flag: result.flag,
               targetLang: result.targetLang,
+              onRemove: onRemoveTranslationResult ? () => onRemoveTranslationResult(index) : undefined,
             },
             draggable: true,
           })
@@ -1134,7 +1208,7 @@ export function LangoWorldFlow({
         newNodes.push({
           id: "history-panel",
           type: "historyNode",
-          position: pos("history-panel", { x: -380, y: -60 }),
+          position: pos("history-panel", { x: -450, y: -60 }),
           data: {
             entries: history,
             onDelete: onDeleteHistoryRef.current,
@@ -1144,11 +1218,12 @@ export function LangoWorldFlow({
       }
 
       // ── Translation History Node ──
-      // Near feature buttons by default, moves right when translation panel is open
+      // Positioned relative to translation-trigger
       if (translationHistory.length > 0) {
+        const trPos = pos("translation-trigger", { x: 480, y: 0 })
         const historyPos = showTranslationPanel
-          ? { x: 1100, y: -40 }   // Far right when panel is open
-          : { x: 350, y: 120 }     // Near feature buttons by default
+          ? { x: trPos.x + 700, y: trPos.y - 40 }   // Far right when panel is open
+          : { x: trPos.x + 220, y: trPos.y - 40 }     // Right side of trigger
         newNodes.push({
           id: "translation-history",
           type: "translationHistory",
@@ -1162,12 +1237,13 @@ export function LangoWorldFlow({
         })
       }
 
-      // ── YouTube summary nodes (left side) ──
+      // ── YouTube summary nodes (relative to youtube-trigger) ──
       if (ytResult?.pageId && ytResult?.pageUrl) {
+        const ytPos = pos("youtube-trigger", { x: 0, y: 0 })
         newNodes.push({
           id: "yt-summary-page",
           type: "summaryPage",
-          position: pos("yt-summary-page", { x: -280, y: 120 }),
+          position: pos("yt-summary-page", { x: ytPos.x - 100, y: ytPos.y + 160 }),
           data: {
             videoTitle: ytResult.title || "YouTube Summary",
             summaryPageUrl: ytResult.pageUrl,
@@ -1179,7 +1255,7 @@ export function LangoWorldFlow({
         newNodes.push({
           id: "yt-rename-node",
           type: "renameNode",
-          position: pos("yt-rename-node", { x: -280, y: 340 }),
+          position: pos("yt-rename-node", { x: ytPos.x - 100, y: ytPos.y + 400 }),
           data: {
             summaryPageId: ytResult.pageId,
             currentSlug: "",
@@ -1191,12 +1267,13 @@ export function LangoWorldFlow({
         })
       }
 
-      // ── Upload summary nodes (right side — parallel with YT) ──
+      // ── Upload summary nodes (relative to upload-trigger) ──
       if (uploadResult?.pageId && uploadResult?.pageUrl) {
+        const upPos = pos("upload-trigger", { x: 160, y: 0 })
         newNodes.push({
           id: "upload-summary-page",
           type: "summaryPage",
-          position: pos("upload-summary-page", { x: 100, y: 350 }),
+          position: pos("upload-summary-page", { x: upPos.x - 80, y: upPos.y + 160 }),
           data: {
             videoTitle: uploadResult.title || "Uploaded Video Summary",
             summaryPageUrl: uploadResult.pageUrl,
@@ -1209,7 +1286,7 @@ export function LangoWorldFlow({
         newNodes.push({
           id: "upload-rename-node",
           type: "renameNode",
-          position: pos("upload-rename-node", { x: 100, y: 570 }),
+          position: pos("upload-rename-node", { x: upPos.x - 80, y: upPos.y + 400 }),
           data: {
             summaryPageId: uploadResult.pageId,
             currentSlug: "",
@@ -1222,12 +1299,13 @@ export function LangoWorldFlow({
         })
       }
 
-      // ── Document summary nodes (far right — parallel with YT & Upload) ──
+      // ── Document summary nodes (relative to doc-trigger) ──
       if (docResult?.pageId && docResult?.pageUrl) {
+        const docPos = pos("doc-trigger", { x: 320, y: 0 })
         newNodes.push({
           id: "doc-summary-page",
           type: "summaryPage",
-          position: pos("doc-summary-page", { x: 480, y: 350 }),
+          position: pos("doc-summary-page", { x: docPos.x, y: docPos.y + 160 }),
           data: {
             videoTitle: docResult.title || "Document Summary",
             summaryPageUrl: docResult.pageUrl,
@@ -1240,7 +1318,7 @@ export function LangoWorldFlow({
         newNodes.push({
           id: "doc-rename-node",
           type: "renameNode",
-          position: pos("doc-rename-node", { x: 480, y: 570 }),
+          position: pos("doc-rename-node", { x: docPos.x, y: docPos.y + 400 }),
           data: {
             summaryPageId: docResult.pageId,
             currentSlug: "",
@@ -1266,12 +1344,15 @@ export function LangoWorldFlow({
     setNodes(prevNodes => {
       const withoutPanel = prevNodes.filter(n => n.id !== "upload-panel")
       if (showUploadPanel) {
+        // Position relative to upload-trigger
+        const trigger = prevNodes.find(n => n.id === "upload-trigger")
+        const triggerPos = trigger?.position ?? { x: 160, y: 0 }
         return [
           ...withoutPanel,
           {
             id: "upload-panel",
             type: "uploadPanel",
-            position: { x: 280, y: -40 },
+            position: { x: triggerPos.x + 120, y: triggerPos.y - 40 },
             data: {
               onUploadVideo: onVideoUpload,
               onClose: () => setShowUploadPanel(false),
@@ -1289,12 +1370,15 @@ export function LangoWorldFlow({
     setNodes(prevNodes => {
       const withoutPanel = prevNodes.filter(n => n.id !== "doc-panel")
       if (showDocPanel) {
+        // Position relative to doc-trigger
+        const trigger = prevNodes.find(n => n.id === "doc-trigger")
+        const triggerPos = trigger?.position ?? { x: 320, y: 0 }
         return [
           ...withoutPanel,
           {
             id: "doc-panel",
             type: "documentPanel",
-            position: { x: 400, y: -40 },
+            position: { x: triggerPos.x + 80, y: triggerPos.y - 40 },
             data: {
               onUploadDocument: onDocumentUpload,
               onClose: () => setShowDocPanel(false),
@@ -1314,13 +1398,16 @@ export function LangoWorldFlow({
       const existingPanel = prevNodes.find(n => n.id === "translation-panel")
       const withoutPanel = prevNodes.filter(n => n.id !== "translation-panel")
       if (showTranslationPanel) {
+        // Position relative to translation-trigger
+        const trigger = prevNodes.find(n => n.id === "translation-trigger")
+        const triggerPos = trigger?.position ?? { x: 480, y: 0 }
         return [
           ...withoutPanel,
           {
             id: "translation-panel",
             type: "translationPanel",
             // Reuse existing position if panel was already shown (preserves drag)
-            position: existingPanel?.position ?? { x: 600, y: -40 },
+            position: existingPanel?.position ?? { x: triggerPos.x + 120, y: triggerPos.y - 40 },
             data: {
               onTranslate: onTranslateRef.current,
               onClose: () => setShowTranslationPanel(false),
@@ -1496,6 +1583,8 @@ export function LangoWorldFlow({
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onConnect={onConnect}
+      onNodeDragStart={onNodeDragStart}
+      onNodeDrag={onNodeDrag}
       nodeTypes={nodeTypes}
       fitView
       fitViewOptions={{ maxZoom: 1 }}

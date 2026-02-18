@@ -293,7 +293,7 @@ function chunkText(text: string, size: number = 4000): string[] {
 
 // ─── Gemini API (queued + retry-aware) ───
 
-async function callGemini(systemInstruction: string, prompt: string, label: string = "yt-gemini"): Promise<string> {
+async function callGemini(systemInstruction: string, prompt: string, label: string = "yt-gemini", jsonMode: boolean = false): Promise<string> {
     return queuedRequest(async (attempt) => {
         const apiKey = getNextApiKey()
         const controller = new AbortController()
@@ -306,7 +306,11 @@ async function callGemini(systemInstruction: string, prompt: string, label: stri
                 body: JSON.stringify({
                     system_instruction: { parts: [{ text: systemInstruction }] },
                     contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { maxOutputTokens: 8000, temperature: 0.7 },
+                    generationConfig: {
+                        maxOutputTokens: 8000,
+                        temperature: 0.7,
+                        ...(jsonMode ? { responseMimeType: "application/json" } : {}),
+                    },
                 }),
                 signal: controller.signal,
             })
@@ -363,29 +367,51 @@ function parseJSON(raw: string): any {
     const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/)
     if (fenceMatch) {
         cleaned = fenceMatch[1].trim()
-    } else {
-        // Extract outermost JSON object
-        const objMatch = cleaned.match(/(\{[\s\S]*\})/)
-        if (objMatch) cleaned = objMatch[1].trim()
     }
 
     // Step 2: Try parsing as-is
     try { return JSON.parse(cleaned) } catch { }
 
-    // Step 3: Fix common Gemini JSON issues
-    cleaned = cleaned
-        // Remove trailing commas before } or ]
-        .replace(/,\s*([\]}])/g, "$1")
-        // Remove control characters (except newlines/tabs)
-        .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, "")
-        // Fix unescaped newlines inside string values
-        .replace(/(?<=:\s*"[^"]*)\n(?=[^"]*")/g, "\\n")
+    // Step 3: Extract outermost JSON object using brace matching
+    const startIdx = cleaned.indexOf("{")
+    if (startIdx !== -1) {
+        let depth = 0
+        let endIdx = -1
+        for (let i = startIdx; i < cleaned.length; i++) {
+            if (cleaned[i] === "{") depth++
+            else if (cleaned[i] === "}") {
+                depth--
+                if (depth === 0) { endIdx = i; break }
+            }
+        }
+        if (endIdx !== -1) {
+            const extracted = cleaned.substring(startIdx, endIdx + 1)
+            try { return JSON.parse(extracted) } catch { }
 
-    // Step 4: Try again
-    try { return JSON.parse(cleaned) } catch (e) {
-        console.error("[YT] JSON parse failed. First 500 chars:", cleaned.slice(0, 500))
-        throw new Error("Could not parse Gemini response as JSON")
+            // Step 4: Fix common Gemini JSON issues
+            const fixed = extracted
+                // Remove trailing commas before } or ]
+                .replace(/,\s*([\]}])/g, "$1")
+                // Remove control characters (except newlines/tabs)
+                .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, "")
+                // Fix unescaped newlines inside string values
+                .replace(/(?<=:\s*"[^"]*)\n(?=[^"]*")/g, "\\n")
+
+            try { return JSON.parse(fixed) } catch { }
+        }
     }
+
+    // Step 5: Last resort — try original regex approach
+    const objMatch = cleaned.match(/(\{[\s\S]*\})/)
+    if (objMatch) {
+        const fallback = objMatch[1]
+            .replace(/,\s*([\]}])/g, "$1")
+            .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, "")
+        try { return JSON.parse(fallback) } catch { }
+    }
+
+    console.error("[YT] JSON parse failed. First 500 chars:", cleaned.slice(0, 500))
+    throw new Error("Could not parse Gemini response as JSON")
 }
 
 // ─── Main Route ───
@@ -494,7 +520,9 @@ Rules:
 - Explanation: engaging, like a tutor
 - If transcript is in Hindi, generate output in English
 - Everything in English`,
-            prompt
+            prompt,
+            "yt-analysis",
+            true // JSON mode
         )
 
         console.log(`[YT] ✅ Got ${rawResult.length} chars from Gemini`)

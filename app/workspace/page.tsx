@@ -613,6 +613,11 @@ export default function WorkspacePage() {
         setTranslationResults([])
     }, [])
 
+    // ─── Remove a single Translation Result ───
+    const handleRemoveTranslationResult = useCallback((index: number) => {
+        setTranslationResults(prev => prev.filter((_, i) => i !== index))
+    }, [])
+
     return (
         <>
             <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-50 flex items-center gap-1.5 sm:gap-2">
@@ -664,6 +669,7 @@ export default function WorkspacePage() {
                     translationHistory={translationHistory}
                     onClearTranslationHistory={handleClearTranslationHistory}
                     onClearTranslationResults={handleClearTranslationResults}
+                    onRemoveTranslationResult={handleRemoveTranslationResult}
                     history={history}
                     onDeleteHistory={handleDeleteHistory}
                 />
