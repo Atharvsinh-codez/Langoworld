@@ -128,14 +128,10 @@ export function TranslationPanel({ data }: TranslationPanelProps) {
 
     const detectedLangInfo = LANGUAGES.find(l => l.code === sourceLang)
 
-    // Confidence badge
+    // Confidence badge — always green "Detected"
     const confidenceBadge = React.useMemo(() => {
         if (!detectedLang) return { color: "", label: "" }
-        if (detectedLang.confidence >= 0.8)
-            return { color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30", label: "Auto-detected" }
-        if (detectedLang.confidence >= 0.5)
-            return { color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30", label: "Best guess" }
-        return { color: "text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800", label: "Low confidence" }
+        return { color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30", label: "Detected" }
     }, [detectedLang])
 
     return (
