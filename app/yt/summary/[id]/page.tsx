@@ -2,10 +2,26 @@
 
 import { useEffect, useState, useRef, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, Play, Pause, ChevronDown, ChevronUp, Clock, Sparkles, BookOpen, Mic, Globe, X, Languages, Download, Eye, EyeOff, Volume2, Loader2, Check } from "lucide-react"
+import { ArrowLeft, Play, Pause, ChevronDown, ChevronUp, Clock, Sparkles, BookOpen, Mic, Globe, X, Languages, Download, Eye, EyeOff, Volume2, Loader2, Check, MonitorPlay } from "lucide-react"
 import type { VideoSummaryData } from "@/lib/summary-store"
 import { createClient } from "@/lib/supabase-browser"
 import { useLingo, LANGUAGES } from "@/lib/lingo"
+
+// ─── Extract YouTube Video ID from URL ───
+function extractYouTubeId(url: string): string | null {
+    if (!url) return null
+    const patterns = [
+        /(?:youtube\.com\/watch\?.*v=)([a-zA-Z0-9_-]{11})/,
+        /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+        /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+        /(?:youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
+    ]
+    for (const pattern of patterns) {
+        const match = url.match(pattern)
+        if (match) return match[1]
+    }
+    return null
+}
 
 // ─── Typewriter Text Component ───
 
@@ -400,6 +416,7 @@ export default function SummaryPage() {
     const [transcriptExpanded, setTranscriptExpanded] = useState(false)
     const [isSpeaking, setIsSpeaking] = useState(false)
     const [isGeneratingTTS, setIsGeneratingTTS] = useState(false)
+    const [showVideoPlayer, setShowVideoPlayer] = useState(true)
 
     // Stop TTS audio when navigating away from the page
     useEffect(() => {
@@ -878,6 +895,38 @@ export default function SummaryPage() {
                         </>
                     )}
                 </div>
+
+                {/* ─── YouTube Video Embed ─── */}
+                {(() => {
+                    const videoId = extractYouTubeId(data.videoUrl || "")
+                    if (!videoId) return null
+                    return (
+                        <section className="mb-12">
+                            <div className="flex items-center gap-2 mb-4">
+                                <MonitorPlay className="w-5 h-5 text-red-500" />
+                                <h2 className="text-xs font-semibold text-foreground uppercase tracking-wider">Watch Video</h2>
+                                <button
+                                    onClick={() => setShowVideoPlayer(!showVideoPlayer)}
+                                    className="ml-auto flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all text-zinc-500"
+                                >
+                                    {showVideoPlayer ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                    {showVideoPlayer ? "Hide" : "Show"}
+                                </button>
+                            </div>
+                            {showVideoPlayer && (
+                                <div className="relative w-full rounded-2xl overflow-hidden shadow-lg shadow-black/10 dark:shadow-black/30 border border-zinc-200/50 dark:border-zinc-800" style={{ paddingBottom: '56.25%' }}>
+                                    <iframe
+                                        className="absolute inset-0 w-full h-full"
+                                        src={`https://www.youtube.com/embed/${videoId}?rel=0`}
+                                        title={data.videoTitle || "YouTube Video"}
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                        allowFullScreen
+                                    />
+                                </div>
+                            )}
+                        </section>
+                    )
+                })()}
 
                 {/* ─── Summary ─── */}
                 <section className="mb-12">
