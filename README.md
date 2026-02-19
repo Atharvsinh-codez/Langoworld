@@ -178,24 +178,37 @@ graph LR
 - **Node.js 18+** • **Python 3.9+** • **npm**
 - [Supabase project](https://supabase.com) • [Gemini API key(s)](https://aistudio.google.com/apikey) • [lingo.dev API key](https://lingo.dev)
 
-### 1. Clone & Install
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/Atharvsinh-codez/Langoworld.git
-cd LangoWorld/langoworld
-npm install
-
-# Python dependencies (for transcript + langdetect)
-cd yt-feature && pip install -r requirements.txt && cd ..
 ```
 
-### 2. Set Up Supabase
+### 2. Install Node.js Dependencies
+
+```bash
+cd Langoworld/langoworld
+npm install
+```
+
+This installs **Next.js 16**, **React 19**, **React Flow**, **lingo.dev SDK**, and all other frontend/backend packages.
+
+### 3. Install Python Dependencies
+
+```bash
+cd yt-feature
+pip install -r requirements.txt
+```
+
+This installs **Flask**, **langdetect**, **pytubefix**, and other Python packages needed for transcript extraction and language detection.
+
+### 4. Set Up Supabase
 
 1. Create a project at [supabase.com](https://supabase.com)
 2. Run `supabase-setup.sql` in **SQL Editor** — creates all tables, RLS policies, indexes & triggers
 3. Enable **Email/Password** auth in Authentication → Providers
 
-### 3. Environment Variables
+### 5. Environment Variables
 
 Create `.env.local` in `langoworld/`:
 
@@ -226,7 +239,7 @@ TUBEINSIGHT_URL=http://localhost:5123
 
 > **No separate `.env` needed for `yt-feature/`** — Unicode script detection runs inline in Next.js. The Python backend only needs to be running, no API keys required for language detection.
 
-### 4. Start Services
+### 6. Start Services
 
 ```bash
 # Terminal 1 — Next.js
@@ -239,7 +252,7 @@ cd yt-feature && python server.py   # → http://localhost:5123
 npx inngest-cli@latest dev      # → http://localhost:8288
 ```
 
-### 5. Use It
+### 7. Use It
 
 Go to `http://localhost:3000` → Sign up → Set username → Paste a YouTube URL, upload a video, or translate text!
 
