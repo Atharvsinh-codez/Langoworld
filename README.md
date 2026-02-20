@@ -272,7 +272,7 @@ Go to `http://localhost:3000` → Sign up → Set username → Paste a YouTube U
 
 ## 📜 API Endpoints
 
-<details>
+<details open>
 <summary><b>Next.js API Routes</b></summary>
 
 | Method | Endpoint | Description |
@@ -291,7 +291,7 @@ Go to `http://localhost:3000` → Sign up → Set username → Paste a YouTube U
 
 </details>
 
-<details>
+<details open>
 <summary><b>Python Flask API (port 5123)</b></summary>
 
 | Method | Endpoint | Description |
@@ -307,7 +307,7 @@ Go to `http://localhost:3000` → Sign up → Set username → Paste a YouTube U
 
 ## ☁️ Deployment
 
-<details>
+<details open>
 <summary><b>Vercel + Render</b></summary>
 
 **Vercel** (Next.js):
