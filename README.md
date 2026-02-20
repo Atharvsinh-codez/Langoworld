@@ -19,6 +19,12 @@
   <sub>▶️ Click to watch the demo on YouTube</sub>
 </p>
 
+<p align="center">
+  <a href="https://langoworld.onrender.com"><img src="https://img.shields.io/badge/🌐_Main_Web-langoworld.onrender.com-blue?style=for-the-badge" alt="Main Web" /></a>
+  <a href="https://langoworld-backend.onrender.com"><img src="https://img.shields.io/badge/⚙️_Backend-langoworld--backend.onrender.com-orange?style=for-the-badge" alt="Backend" /></a>
+  <a href="https://langoworld-backend.onrender.com/api/health"><img src="https://img.shields.io/badge/💚_Health_Check-/api/health-green?style=for-the-badge" alt="Health Check" /></a>
+</p>
+
 > **Summarize any video. Translate to 25+ languages. Listen with AI voice. All from one beautiful canvas.**
 
 LangoWorld transforms any **YouTube video**, **uploaded video**, or **document** into a structured, multilingual learning experience — with AI summaries, TTS narration, and instant translation into 25+ languages, all on an interactive React Flow canvas.
