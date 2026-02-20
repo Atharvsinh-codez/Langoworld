@@ -11,6 +11,14 @@
 
 # 🌍 LangoWorld — AI-Powered Video Intelligence & Translation Platform
 
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=CV4vk30vqDM">
+    <img src="https://img.youtube.com/vi/CV4vk30vqDM/maxresdefault.jpg" alt="LangoWorld Demo" width="700" />
+  </a>
+  <br/>
+  <sub>▶️ Click to watch the demo on YouTube</sub>
+</p>
+
 > **Summarize any video. Translate to 25+ languages. Listen with AI voice. All from one beautiful canvas.**
 
 LangoWorld transforms any **YouTube video**, **uploaded video**, or **document** into a structured, multilingual learning experience — with AI summaries, TTS narration, and instant translation into 25+ languages, all on an interactive React Flow canvas.
