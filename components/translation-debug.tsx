@@ -51,7 +51,7 @@ export function TranslationDebug() {
           <span className="text-sm font-medium">Locale:</span>
           <Badge variant="outline">{locale}</Badge>
         </div>
-        
+
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">Status:</span>
           <Badge variant={isLoading ? "secondary" : cacheHit ? "default" : "destructive"}>
@@ -62,7 +62,7 @@ export function TranslationDebug() {
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">Sample:</span>
           <span className="text-xs text-muted-foreground">
-            {t("Generate Podcast") || "Generate Podcast"}
+            {t("Translate Text") || "Translate Text"}
           </span>
         </div>
 
@@ -82,7 +82,7 @@ export function TranslationDebug() {
             <RefreshCw className="h-3 w-3 mr-1" />
             Clear Current Cache
           </Button>
-          
+
           <Button
             size="sm"
             variant="outline"
@@ -92,7 +92,7 @@ export function TranslationDebug() {
             <RefreshCw className="h-3 w-3 mr-1" />
             Force Re-translation
           </Button>
-          
+
           <Button
             size="sm"
             variant="destructive"

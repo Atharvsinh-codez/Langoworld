@@ -21,7 +21,7 @@ export function LoadingScreen({ steps }: LoadingScreenProps) {
       <div className="space-y-6 sm:space-y-8">
         <div className="text-center space-y-2">
           <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
-            Creating your podcast
+            Processing your content
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground">
             This may take a few moments
@@ -52,10 +52,10 @@ export function LoadingScreen({ steps }: LoadingScreenProps) {
                     step.status === "completed"
                       ? "text-foreground"
                       : step.status === "processing"
-                      ? "text-foreground"
-                      : step.status === "error"
-                      ? "text-destructive"
-                      : "text-muted-foreground"
+                        ? "text-foreground"
+                        : step.status === "error"
+                          ? "text-destructive"
+                          : "text-muted-foreground"
                   )}
                 >
                   {step.label}

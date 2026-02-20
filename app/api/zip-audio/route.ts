@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
 
     // Store the zip file using R2 CDN
-    const zipText = `podcast-bundle-${Date.now()}-${audioFiles.length}-files`
+    const zipText = `audio-bundle-${Date.now()}-${audioFiles.length}-files`
 
     const storedZip = await storeAudioToR2({
       text: zipText,
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       section: "zip-bundle",
     });
 
-    const zipFileName = `podcast-bundle-${Date.now()}.zip`;
+    const zipFileName = `audio-bundle-${Date.now()}.zip`;
 
     console.log(`[ZIP] Zip file created: ${storedZip.url}, size: ${zipBuffer.length} bytes`);
 
