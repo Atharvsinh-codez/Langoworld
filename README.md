@@ -20,9 +20,8 @@
 </p>
 
 <p align="center">
-  🌐 <strong>Main Web:</strong> <a href="https://langoworld.onrender.com">langoworld.onrender.com</a> &nbsp;•&nbsp;
-  ⚙️ <strong>Backend:</strong> <a href="https://langoworld-backend.onrender.com">langoworld-backend.onrender.com</a> &nbsp;•&nbsp;
-  💚 <strong>Health:</strong> <a href="https://langoworld-backend.onrender.com/api/health">/api/health</a>
+   <strong>Live Web:</strong> <a href="https://langoworld.onrender.com">langoworld.onrender.com</a> &nbsp;&nbsp; 
+  <br><strong>Backend:</strong> <a href="https://langoworld-backend.onrender.com">langoworld-backend.onrender.com</a> &nbsp;&nbsp; <strong>Health:</strong> <a href="https://langoworld-backend.onrender.com/api/health">/api/health</a>
 </p>
 
 > **Summarize any video. Translate to 25+ languages. Listen with AI voice. All from one beautiful canvas.**
@@ -78,16 +77,14 @@ graph TB
 
 ```mermaid
 graph LR
-    Input["User Text"] --> Unicode["Unicode Script<br/>Detection"]
-    Unicode -->|"Gujarati/Tamil/<br/>Arabic/CJK/..."| Detected["✅ Language<br/>Detected"]
-    Unicode -->|"Latin script"| Python["Python langdetect<br/>Backend"]
-    Python --> Detected
+    Input["User Text"] --> LangDetect["Python langdetect<br/>Backend"]
+    LangDetect --> Detected["✅ Language<br/>Detected"]
     Detected --> LingoSDK["lingo.dev SDK<br/>localizeText()"]
     LingoSDK --> Result["Translation<br/>Cards on Canvas"]
     Result --> TTS2["🔊 Gemini TTS<br/>Read Aloud"]
 ```
 
-> **No backend `.env` needed** for Indic/CJK/Arabic detection — Unicode script analysis runs inline in the Next.js API route.
+> Language detection is powered by Python `langdetect` running on the Flask backend.
 
 ---
 
@@ -162,7 +159,7 @@ graph LR
 | 🎥 **YouTube Summarizer** | AI summary with key points, chapters & Gemini JSON mode |
 | 📤 **Video Upload** | R2 CDN storage → Gemini video analysis |
 | 📄 **Document Upload** | AI-powered document understanding |
-| 🌐 **Translation** | Unicode + langdetect auto-detection → lingo.dev SDK → 25+ languages |
+| 🌐 **Translation** | Auto-detect language via langdetect → lingo.dev SDK → 25+ languages |
 | 🔊 **Read Aloud** | Gemini TTS with system instruction + R2 caching |
 | ❌ **Remove Cards** | Click ✕ on any translation card to remove it individually |
 | 🔗 **Drag-Follow** | Drag a trigger → all children follow automatically |
@@ -179,7 +176,7 @@ graph LR
 | Layer | Technologies |
 |-------|-------------|
 | **Frontend** | Next.js 16, React 19, TypeScript, Tailwind CSS 4, Shadcn UI, React Flow, GSAP, Framer Motion, Three.js |
-| **AI & Translation** | Google Gemini 2.5 Flash (analysis + TTS), [lingo.dev](https://lingo.dev) SDK (25+ languages), Unicode script detection |
+| **AI & Translation** | Google Gemini 2.5 Flash (analysis + TTS), [lingo.dev](https://lingo.dev) SDK (25+ languages) |
 | **Backend** | Python Flask (langdetect + transcripts), Inngest (async TTS jobs) |
 | **Data** | Supabase (Auth + PostgreSQL + RLS), Cloudflare R2 (CDN storage) |
 
@@ -251,7 +248,7 @@ TRANSCRIPT_API_URL=http://localhost:5123
 TUBEINSIGHT_URL=http://localhost:5123
 ```
 
-> **No separate `.env` needed for `yt-feature/`** — Unicode script detection runs inline in Next.js. The Python backend only needs to be running, no API keys required for language detection.
+> **No separate `.env` needed for `yt-feature/`** — the Python backend only needs to be running, no API keys required for language detection.
 
 ### 6. Start Services
 
@@ -297,7 +294,7 @@ Go to `http://localhost:3000` → Sign up → Set username → Paste a YouTube U
 | `POST` | `/api/tts` | Gemini TTS (sync, with system instruction) |
 | `POST` | `/api/tts-async` | Async TTS via Inngest |
 | `POST` | `/api/translate` | lingo.dev SDK translation |
-| `POST` | `/api/detect-language` | Unicode script + Python langdetect fallback |
+| `POST` | `/api/detect-language` | Auto-detect source language via Python langdetect |
 | `POST` | `/api/youtube-transcript` | Transcript fetcher |
 | `GET/POST` | `/api/yt-summary/[id]` | Summary CRUD |
 | `POST` | `/api/chapters` | Chapter generation |
@@ -311,7 +308,7 @@ Go to `http://localhost:3000` → Sign up → Set username → Paste a YouTube U
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/health` | Health check |
-| `POST` | `/api/detect-language` | Unicode + langdetect (code + confidence) |
+| `POST` | `/api/detect-language` | Auto-detect language using `langdetect` (returns code + confidence) |
 | `POST` | `/api/transcript` | YouTube transcript extraction |
 | `POST` | `/api/video-info` | Video metadata |
 
