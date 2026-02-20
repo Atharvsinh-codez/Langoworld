@@ -20,9 +20,9 @@
 </p>
 
 <p align="center">
-  <a href="https://langoworld.onrender.com"><img src="https://img.shields.io/badge/🌐_Main_Web-langoworld.onrender.com-blue?style=for-the-badge" alt="Main Web" /></a>
-  <a href="https://langoworld-backend.onrender.com"><img src="https://img.shields.io/badge/⚙️_Backend-langoworld--backend.onrender.com-orange?style=for-the-badge" alt="Backend" /></a>
-  <a href="https://langoworld-backend.onrender.com/api/health"><img src="https://img.shields.io/badge/💚_Health_Check-/api/health-green?style=for-the-badge" alt="Health Check" /></a>
+  🌐 <strong>Main Web:</strong> <a href="https://langoworld.onrender.com">langoworld.onrender.com</a> &nbsp;•&nbsp;
+  ⚙️ <strong>Backend:</strong> <a href="https://langoworld-backend.onrender.com">langoworld-backend.onrender.com</a> &nbsp;•&nbsp;
+  💚 <strong>Health:</strong> <a href="https://langoworld-backend.onrender.com/api/health">/api/health</a>
 </p>
 
 > **Summarize any video. Translate to 25+ languages. Listen with AI voice. All from one beautiful canvas.**
